@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,17 +14,22 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Clipboard from "expo-clipboard";
+import Divider from "./components/Divider/Divider";
 
 export default function App() {
   const [mnemonicOpenned, setMnemonicOpenned] = useState("");
   const [mnemonicToOpen, setMenemonicToOpen] = useState("");
   const [wallets, setWallets] = useState();
-  const [loading, setLoading] = useState(false);
+  const [loadingGenerate, setLoadingGenerate] = useState(false);
+  const [loadingOpenWallet, setLoadingOpenWallet] = useState(false);
   const [isOpenInsertMnemonic, setIsOpenInsertMnemonic] = useState(false);
+  const [totalSupplyChainlink, setTotalSupplyChainlink] = useState();
+  const [loadingTotalSupplyChainlink, setLoadingTotalSupplyChainlink] =
+    useState(true);
 
   const generateWallets = async () => {
     try {
-      setLoading(true);
+      setLoadingGenerate(true);
 
       const { data } = await axios.get(
         "https://test-crypto-wallet-backend-production.up.railway.app/create-wallet"
@@ -33,7 +38,7 @@ export default function App() {
       setMnemonicOpenned(data.mnemonic);
       setWallets(data.wallets);
     } finally {
-      setLoading(false);
+      setLoadingGenerate(false);
     }
   };
 
@@ -47,7 +52,7 @@ export default function App() {
 
   const openWallets = async () => {
     try {
-      setLoading(true);
+      setLoadingOpenWallet(true);
 
       const { data } = await axios.post(
         "https://test-crypto-wallet-backend-production.up.railway.app/open-wallet",
@@ -63,13 +68,33 @@ export default function App() {
     } catch (error) {
       console.log(error);
     } finally {
-      setLoading(false);
+      setLoadingOpenWallet(false);
     }
   };
 
   const openInsertMnemonic = () => {
     setIsOpenInsertMnemonic(true);
   };
+
+  // const fetchTotalSupplyTokenChainlink = async () => {
+  //   try {
+  //     setLoadingTotalSupplyChainlink(true);
+
+  //     const { data } = await axios.get(
+  //       "https://test-crypto-wallet-backend-production.up.railway.app/total-supply-token"
+  //     );
+
+  //     setTotalSupplyChainlink(data.totalSupply);
+  //   } catch (error) {
+  //     console.log(error);
+  //   } finally {
+  //     setLoadingTotalSupplyChainlink(false);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   fetchTotalSupplyTokenChainlink();
+  // }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -93,18 +118,38 @@ export default function App() {
                 title="Cancelar"
                 onPress={() => setIsOpenInsertMnemonic(false)}
               />
-              <Button title="Abrir" onPress={openWallets} />
+
+              <View style={styles.row}>
+                <Button title="Abrir" onPress={openWallets} />
+
+                {loadingOpenWallet && (
+                  <ActivityIndicator size="large" color="#0000ff" />
+                )}
+              </View>
             </View>
           </View>
         </View>
       </Modal>
 
       <Text style={styles.header}>Gerador de Carteiras com Frase-semente</Text>
+
+      {/* <View style={styles.row}>
+        <Text style={styles.header3}>Quantidade Tokens Chainlink:</Text>
+
+        {loadingTotalSupplyChainlink ? (
+          <ActivityIndicator />
+        ) : (
+          <Text style={styles.totalSupplyToken}>
+            {totalSupplyChainlink || "--"}
+          </Text>
+        )}
+      </View> */}
+
       <Button title="Gerar Carteiras" onPress={generateWallets} />
 
       <Button title="Abrir Carteiras" onPress={openInsertMnemonic} />
 
-      {loading && (
+      {loadingGenerate && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0000ff" />
           <Text>Carregando...</Text>
@@ -128,10 +173,12 @@ export default function App() {
           <ScrollView style={styles.walletList}>
             {Object.values(wallets).map((wallet, index) => (
               <View key={index} style={styles.walletCard}>
+                {index !== 0 && <Divider />}
+
                 <Text style={styles.walletName}>{wallet.name}</Text>
 
                 <View style={styles.row}>
-                  <Text style={styles.walletAddress}>
+                  <Text style={styles.walletDefaultItem}>
                     Endereço: {wallet.address}
                   </Text>
                   <TouchableOpacity
@@ -153,6 +200,10 @@ export default function App() {
                     <Text style={styles.copyButtonText}>Copiar</Text>
                   </TouchableOpacity>
                 </View>
+
+                <Text style={styles.walletAddress}>
+                  Saldo: {wallet.balance ?? "--"}
+                </Text>
               </View>
             ))}
           </ScrollView>
@@ -180,7 +231,13 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 5,
+  },
+  header3: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  totalSupplyToken: {
+    marginLeft: 10,
   },
   header: {
     fontSize: 24,
@@ -209,12 +266,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 1 },
+    gap: 8,
+    maxWidth: "100%",
   },
   walletName: {
     fontSize: 18,
     fontWeight: "bold",
   },
-  walletAddress: {
+  walletDefaultItem: {
     fontSize: 14,
     marginTop: 5,
     color: "#555",
