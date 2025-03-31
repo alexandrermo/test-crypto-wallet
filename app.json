@@ -13,16 +13,26 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.alexandrermo.testcryptowallet",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.alexandrermo.testcryptowallet"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e2f613b3-0d4b-47d2-bee0-362b6e13e84f"
+      }
     }
   }
 }
